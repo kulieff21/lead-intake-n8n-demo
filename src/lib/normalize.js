@@ -6,7 +6,8 @@ const BUDGETS = ['<1k', '1k-5k', '5k-20k', '20k+', 'unknown'];
 const TIMELINES = ['asap', '1-3 months', '3+ months', 'exploring', 'unknown'];
 const FREE_MAIL = ['gmail.com', 'googlemail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
   'live.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com', 'mail.ru', 'yandex.ru', 'gmx.com'];
-const EMAIL_RE = /^[^\s@]+@([a-z0-9-]+\.)+[a-z]{2,}$/;
+// Conservative on purpose: the address is shown in HTML pages and used in mail headers.
+const EMAIL_RE = /^[a-z0-9._%+-]{1,64}@([a-z0-9-]+\.)+[a-z]{2,}$/;
 const MAX = { name: 120, company: 160, message: 4000, source: 60, website: 200 };
 
 function clean(v, max) {

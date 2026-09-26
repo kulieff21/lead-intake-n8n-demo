@@ -2,6 +2,8 @@
 // placeholders in workflows/*.json, (re)publish, and wait until the webhook is registered.
 // Flags: --ai-base-url <url>  override the LLM endpoint (used by the e2e failure scenario).
 //        --sheet-id <id>      override the sheet id (used by the e2e error scenario).
+//        --smtp-port <port>   override the SMTP port (e2e: mail server down).
+//        --wait-minutes <n>   approval window in minutes instead of 48 h (e2e: expiry).
 //        --skip-sheet         do not touch the spreadsheet (dry deploy before it exists).
 import { readFileSync } from 'node:fs';
 import { N8N, api, config, secret, loadState, saveState, sheets, sleep } from './common.mjs';
@@ -40,14 +42,18 @@ function credentialData() {
     sheets: { type: 'googleApi', name: 'Google Sheets (service account)', data: { email: sa.client_email, privateKey: sa.private_key } },
     openrouter: { type: 'httpHeaderAuth', name: 'OpenRouter', data: { name: 'Authorization', value: `Bearer ${key}` } },
     telegram: { type: 'telegramApi', name: 'Telegram reviewer bot', data: { accessToken: cfg.telegram.token, baseUrl: cfg.telegram.baseUrl ?? 'https://api.telegram.org' } },
-    smtp: { type: 'smtp', name: 'SMTP outbound', data: { user: cfg.smtp.user, password: cfg.smtp.password, host: cfg.smtp.host, port: cfg.smtp.port, secure: !!cfg.smtp.secure, disableStartTls: !!cfg.smtp.disableStartTls } },
+    smtp: { type: 'smtp', name: 'SMTP outbound', data: { user: cfg.smtp.user, password: cfg.smtp.password, host: cfg.smtp.host, port: Number(flag('--smtp-port') ?? cfg.smtp.port), secure: !!cfg.smtp.secure, disableStartTls: !!cfg.smtp.disableStartTls } },
   };
 }
 
 async function ensureCredentials() {
   for (const [k, c] of Object.entries(credentialData())) {
-    // Recreate every time: the public API cannot read secrets back, so "unchanged" is unknowable.
-    if (state.creds[k]) await api(`/credentials/${state.creds[k]}`, { method: 'DELETE' });
+    // Update in place: ids stay stable, so executions already running keep working.
+    if (state.creds[k]) {
+      const u = await api(`/credentials/${state.creds[k]}`, { method: 'PATCH', body: c });
+      if (u.ok) continue;
+      if (u.status !== 404) throw new Error(`credential ${k} update: ${u.status} ${u.text.slice(0, 300)}`);
+    }
     const r = await api('/credentials', { method: 'POST', body: c });
     if (!r.ok) throw new Error(`credential ${k}: ${r.status} ${r.text.slice(0, 300)}`);
     state.creds[k] = r.json.id;
@@ -68,6 +74,8 @@ function fill(file, extra = {}) {
   const left = text.match(/__[A-Z_]+__/g);
   if (left) throw new Error(`${file}: unfilled placeholders ${[...new Set(left)].join(', ')}`);
   const wf = JSON.parse(text);
+  const waitMin = flag('--wait-minutes');
+  for (const n of wf.nodes) if (waitMin && n.type === 'n8n-nodes-base.wait') Object.assign(n.parameters, { resumeAmount: Number(waitMin), resumeUnit: 'minutes' });
   return { name: wf.name, nodes: wf.nodes, connections: wf.connections, settings: wf.settings };
 }
 

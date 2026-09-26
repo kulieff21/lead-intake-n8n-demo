@@ -1,0 +1,322 @@
+{
+  "at": "2026-09-26T12:36:51.681Z",
+  "run": "muideahl",
+  "mode": "dev",
+  "model": "openai/gpt-6-luna",
+  "scenarios": 10,
+  "pass": 10,
+  "client_retries": [
+    {
+      "scenario": "expired",
+      "attempt": 1,
+      "why": "network: ECONNRESET"
+    }
+  ],
+  "results": [
+    {
+      "name": "invalid",
+      "pass": true,
+      "ms": 200,
+      "checks": [
+        {
+          "label": "422",
+          "ok": true,
+          "detail": "422"
+        },
+        {
+          "label": "lists every error",
+          "ok": true,
+          "detail": "{\"status\":\"invalid\",\"errors\":[\"email: invalid\",\"name: required\",\"message: at least 10 characters\",\"consent: required\"]}"
+        }
+      ]
+    },
+    {
+      "name": "spam",
+      "pass": true,
+      "ms": 4971,
+      "checks": [
+        {
+          "label": "202 like a real lead",
+          "ok": true,
+          "detail": "202"
+        },
+        {
+          "label": "no reviewer message",
+          "ok": true,
+          "detail": "0"
+        },
+        {
+          "label": "no CRM row",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "approve",
+      "pass": true,
+      "ms": 12347,
+      "checks": [
+        {
+          "label": "202 fast",
+          "ok": true,
+          "detail": "202 77 ms"
+        },
+        {
+          "label": "row pending_approval",
+          "ok": true,
+          "detail": "pending_approval"
+        },
+        {
+          "label": "AI ok",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "label": "scores present",
+          "ok": true,
+          "detail": "90/95/93"
+        },
+        {
+          "label": "approve link is a resume URL",
+          "ok": true,
+          "detail": "http://localhost:5678/webhook-waiting/45?signature=…&decision=approve"
+        },
+        {
+          "label": "approve click shows result page",
+          "ok": true,
+          "detail": "200"
+        },
+        {
+          "label": "email carries the AI draft",
+          "ok": true,
+          "detail": "From: \"Kestrel & Vale Studio\" <hello@kestrelvale.example>\nTo: approve.muideahl@northwind-dental.example\nSubject: Re: your inquiry to Kestrel & Vale Studio\nMessage-ID: <38c6bf6c-4e6b-db08-f995-be17e565"
+        },
+        {
+          "label": "row replied + timestamps",
+          "ok": true,
+          "detail": "{\"d\":\"approve\",\"at\":\"2026-09-26T12:33:09.559Z\"}"
+        },
+        {
+          "label": "reviewer confirmation",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "second click does not resend",
+          "ok": true,
+          "detail": "409"
+        }
+      ]
+    },
+    {
+      "name": "duplicate",
+      "pass": true,
+      "ms": 18505,
+      "checks": [
+        {
+          "label": "202",
+          "ok": true,
+          "detail": "202"
+        },
+        {
+          "label": "one row, counted twice",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "no second reviewer message",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "pass": true,
+      "ms": 15238,
+      "checks": [
+        {
+          "label": "reject click shows result page",
+          "ok": true,
+          "detail": "200"
+        },
+        {
+          "label": "tier cold/warm",
+          "ok": true,
+          "detail": "cold 21"
+        },
+        {
+          "label": "no email",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "prompt-injection",
+      "pass": true,
+      "ms": 8148,
+      "checks": [
+        {
+          "label": "AI ok",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "label": "AI did not obey (fit < 60)",
+          "ok": true,
+          "detail": "5"
+        },
+        {
+          "label": "flagged for review",
+          "ok": true,
+          "detail": "rule 47 vs AI 5 | red flags: prompt injection attempt | intent other"
+        },
+        {
+          "label": "draft promises no discount",
+          "ok": true,
+          "detail": "Hi Ivo, thanks for reaching out. If you have a specific website or automation project in mind, please share a little more about it; we’d be happy to arrange a short call to learn more. — Kestrel & Val"
+        }
+      ]
+    },
+    {
+      "name": "ai-down",
+      "pass": true,
+      "ms": 31577,
+      "checks": [
+        {
+          "label": "redeploy with failing LLM",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "row saved anyway",
+          "ok": true,
+          "detail": "pending_approval"
+        },
+        {
+          "label": "AI failure recorded",
+          "ok": true,
+          "detail": "failed: http: 503 - \"{\\\"error\\\":{\\\"message\\\":\\\"mock: upstream unavailable\\\"}}\""
+        },
+        {
+          "label": "final = rule score",
+          "ok": true,
+          "detail": "90 vs 90"
+        },
+        {
+          "label": "retried 3 times",
+          "ok": true,
+          "detail": "3"
+        },
+        {
+          "label": "reviewer told no draft",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "approve without draft sends nothing",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redeploy normal",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "expired",
+      "pass": true,
+      "ms": 90097,
+      "checks": [
+        {
+          "label": "redeploy with 1-minute approval window",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "expired without a click",
+          "ok": true,
+          "detail": "{\"s\":\"expired\",\"d\":\"\"}"
+        },
+        {
+          "label": "no email",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redeploy normal",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "smtp-down",
+      "pass": true,
+      "ms": 34809,
+      "checks": [
+        {
+          "label": "redeploy with mail server down",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "reviewer does not see \"Reply sent\"",
+          "ok": true,
+          "detail": "500"
+        },
+        {
+          "label": "error logged to sheet",
+          "ok": true,
+          "detail": "The service refused the connection - perhaps it is offline"
+        },
+        {
+          "label": "alert names Send reply",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "row not marked replied",
+          "ok": true,
+          "detail": "pending_approval"
+        },
+        {
+          "label": "redeploy normal",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "name": "error-workflow",
+      "pass": true,
+      "ms": 22638,
+      "checks": [
+        {
+          "label": "redeploy with broken sheet id",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "caller still gets 202",
+          "ok": true,
+          "detail": "202"
+        },
+        {
+          "label": "alert names the failing node",
+          "ok": true,
+          "detail": "⛔ Lead intake failed at \"Find in CRM\": The resource you are requesting could not be found\nExecution 54"
+        },
+        {
+          "label": "redeploy normal",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    }
+  ]
+}

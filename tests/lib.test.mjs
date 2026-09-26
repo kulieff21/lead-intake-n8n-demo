@@ -30,6 +30,12 @@ test('rejects missing fields with every reason', () => {
   assert.deepEqual(r.errors, ['email: invalid', 'name: required', 'message: at least 10 characters', 'consent: required']);
 });
 
+test('email with markup or spaces is rejected', () => {
+  for (const e of ['a<b@x.example', 'a b@x.example', '"q"@x.example', 'a@x']) {
+    assert.equal(L.normalizeLead({ ...good, email: e }, NOW).ok, false, e);
+  }
+});
+
 test('honeypot marks spam without validating', () => {
   const r = plain(L.normalizeLead({ ...good, company_fax: 'x' }, NOW));
   assert.equal(r.spam, true);

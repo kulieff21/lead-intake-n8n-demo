@@ -52,6 +52,13 @@ const sheetWrite = (operation, value, sheet = 'leads') => ({
   options: {},
 });
 const retry = { retryOnFail: true, maxTries: 3, waitBetweenTries: 2000 };
+// Small HTML page shown to the reviewer after clicking a link (email is charset-restricted).
+const page = (title, detailExpr) => ({
+  respondWith: 'text',
+  responseBody: `={{ '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title>` +
+    `<body style="font:17px/1.5 system-ui;margin:3rem auto;max-width:34rem;padding:0 1rem"><h1>${title}</h1><p>' + ${detailExpr} + '</p>' }}`,
+  options: { responseCode: 200, responseHeaders: { entries: [{ name: 'content-type', value: 'text/html; charset=utf-8' }] } },
+});
 
 let seq = 0;
 const node = (name, type, typeVersion, position, parameters, extra = {}) =>
@@ -122,7 +129,7 @@ const main = [
   }, { credentials: cred('telegram'), ...retry }),
   node('Wait for decision', 'n8n-nodes-base.wait', 1.1, [2420, 400], {
     resume: 'webhook', httpMethod: 'GET', limitWaitTime: true, limitType: 'afterTimeInterval',
-    resumeAmount: 48, resumeUnit: 'hours', options: {},
+    resumeAmount: 48, resumeUnit: 'hours', responseMode: 'responseNode', options: {},
   }, { webhookId: '0b7d5c1e-wait-4dec-8a11-kestrelvale02' }),
   node('Decision', 'n8n-nodes-base.switch', 3.4, [2640, 400], {
     rules: { values: [
@@ -157,6 +164,9 @@ const main = [
     lead_key: "={{ $('Assess').item.json.row.lead_key }}",
     status: 'expired', decided_at: now,
   }), { credentials: cred('sheets'), ...retry }),
+  node('Page: sent', 'n8n-nodes-base.respondToWebhook', 1.5, [3520, 20], page('Reply sent', "'Reply sent to ' + $('Assess').item.json.row.email + '. The CRM row is updated.'")),
+  node('Page: approved, nothing sent', 'n8n-nodes-base.respondToWebhook', 1.5, [3300, 340], page('Approved', "'No AI draft was available, so no email was sent. Reply to ' + $('Assess').item.json.row.email + ' by hand.'")),
+  node('Page: rejected', 'n8n-nodes-base.respondToWebhook', 1.5, [3080, 480], page('Rejected', "'Lead ' + $('Assess').item.json.row.email + ' is marked rejected. No email was sent.'")),
   node('Confirm to reviewer', 'n8n-nodes-base.telegram', 1.2, [3520, 140], {
     resource: 'message', operation: 'sendMessage', chatId: PH.chatId,
     text: "=Reply sent to {{ $('Assess').item.json.row.email }} ✅",
@@ -174,7 +184,8 @@ const edges = [
   link('Save to CRM', 'Ask reviewer'), link('Ask reviewer', 'Wait for decision'), link('Wait for decision', 'Decision'),
   link('Decision', 'Has draft?', 0), link('Decision', 'Mark rejected', 1), link('Decision', 'Mark expired', 2),
   link('Has draft?', 'Send reply', 0), link('Has draft?', 'Mark approved (no draft)', 1),
-  link('Send reply', 'Mark replied'), link('Mark replied', 'Confirm to reviewer'),
+  link('Send reply', 'Mark replied'), link('Mark replied', 'Confirm to reviewer'), link('Mark replied', 'Page: sent'),
+  link('Mark approved (no draft)', 'Page: approved, nothing sent'), link('Mark rejected', 'Page: rejected'),
 ];
 function connections(list) {
   const c = {};
