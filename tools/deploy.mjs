@@ -4,6 +4,7 @@
 //        --sheet-id <id>      override the sheet id (used by the e2e error scenario).
 //        --smtp-port <port>   override the SMTP port (e2e: mail server down).
 //        --wait-minutes <n>   approval window in minutes instead of 48 h (e2e: expiry).
+//        --mode dev|live      mock or real Telegram/SMTP (default: config "mode").
 //        --skip-sheet         do not touch the spreadsheet (dry deploy before it exists).
 import { readFileSync } from 'node:fs';
 import { N8N, api, config, secret, loadState, saveState, sheets, sleep } from './common.mjs';
@@ -11,7 +12,13 @@ import { loadLib } from '../tests/load.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-const cfg = config();
+const base = config();
+// --mode dev: mock Telegram/SMTP from the *_dev settings (tools/e2e.mjs); live: the real ones.
+const mode = flag('--mode') ?? base.mode ?? 'dev';
+if (!['dev', 'live'].includes(mode)) throw new Error(`unknown mode ${mode}`);
+const cfg = mode === 'dev'
+  ? { ...base, telegram: base.telegram_dev ?? base.telegram, smtp: base.smtp_dev ?? base.smtp, fromEmail: base.fromEmail_dev ?? base.fromEmail }
+  : base;
 const aiBaseUrl = flag('--ai-base-url') ?? cfg.aiBaseUrl;
 const state = loadState();
 
@@ -119,4 +126,4 @@ await ensureCredentials();
 const errId = await upsertWorkflow('errors', fill('lead-intake-errors.json'), true);
 const mainId = await upsertWorkflow('main', fill('lead-intake.json', { __ERROR_WORKFLOW_ID__: errId }), true);
 const ms = await waitForWebhook('lead-intake');
-console.log(`deployed main=${mainId} errors=${errId} ai=${aiBaseUrl} webhook live after ${ms} ms`);
+console.log(`deployed mode=${mode} main=${mainId} errors=${errId} ai=${aiBaseUrl} webhook live after ${ms} ms`);

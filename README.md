@@ -74,8 +74,24 @@ flowchart LR
 Failure scenarios reconfigure the deployment (`--ai-base-url`, `--smtp-port`, `--sheet-id`,
 `--wait-minutes`). The workflow itself has no test switches.
 
-**Not yet shown here:** a live run with a real Telegram bot, a real mailbox and a public webhook
-URL.
+### Live run (local webhook)
+
+One lead through the real services: Google Sheets, the LLM, a real Telegram bot and Gmail SMTP.
+A person approved it in Telegram. [`results/live-2026-09-26.json`](results/live-2026-09-26.json)
+(addresses redacted).
+
+| Step | Measured |
+|---|---|
+| Form → `202` | 163 ms |
+| Row `pending_approval`, message in Telegram | 10.7 s (rule 75, AI 92, final 85, hot) |
+| Human clicked Approve → row `replied` | 61.5 s after the form |
+| Reply in the recipient's inbox | checked over IMAP: subject, recipient, body = the approved draft |
+
+The rule score is 75 here, not 90 as in the dev run, because the live test address is a
+Gmail address and the rules do not award company-mailbox points to free mailboxes.
+
+**Not yet shown:** the form arriving from outside and the approval clicked on a phone. Both
+need a public URL (tunnel). The approval link here pointed at `127.0.0.1`.
 
 ## Known limits
 
@@ -116,6 +132,9 @@ node --test "tests/*.test.mjs"
 node tools/deploy.mjs
 node tools/e2e.mjs
 ```
+
+Set n8n's `WEBHOOK_URL` to a public URL, or to `http://127.0.0.1:5678/` for a local test.
+Telegram rejects inline-button URLs on `localhost` ("Wrong HTTP URL") but accepts `127.0.0.1`.
 
 To import by hand instead: import both files from `workflows/`, then replace the `__PLACEHOLDER__`
 values and select your credentials.

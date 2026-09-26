@@ -1,0 +1,32 @@
+{
+  "at": "2026-09-26T13:12:34.948Z",
+  "mode": "live, local webhook (no tunnel)",
+  "services": {
+    "sheets": "real",
+    "llm": "openai/gpt-6-luna",
+    "telegram": "real bot",
+    "smtp": "real (smtp.gmail.com)"
+  },
+  "ack": {
+    "status": 202,
+    "ms": 163
+  },
+  "marks": {
+    "pending": 10698,
+    "decided": 61519
+  },
+  "row": {
+    "status": "replied",
+    "rule_score": "75",
+    "ai_fit_score": "92",
+    "final_score": "85",
+    "tier": "hot",
+    "needs_review": "no",
+    "intent": "new_project",
+    "summary": "Northwind Dental wants online booking integrated with its practice software and automated reminder emails across three clinics. The stated budget of $5k–$20k and desire to start this month align well with Kestrel & Vale Studio’s ideal lead profile.",
+    "reply_draft": "Hi Mira,\n\nThanks for reaching out. Online booking integrated with your practice software and reminder emails sounds like a concrete project we can discuss. Would you be available for a short call to tell us which practice software you use and what you’d like the booking process to look like?\n\nBest,\nKestrel & Vale team",
+    "decision": "approve",
+    "decided_at": "2026-09-26T13:12:30.999Z",
+    "replied_at": "2026-09-26T13:12:31.000Z"
+  }
+}

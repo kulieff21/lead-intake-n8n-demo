@@ -53,7 +53,7 @@ const tgFor = (email, since) => mocks.telegram.find((m) => m.at >= since && m.pa
 // execution started in that window can hit n8n's fixed 250 ms regex guard during parameter
 // validation ("Regular expression execution timed out"). Let it settle. See README, "Known limits".
 const deploy = (...extra) => {
-  const line = execFileSync(process.execPath, ['tools/deploy.mjs', ...extra], { encoding: 'utf8' }).trim().split('\n').pop();
+  const line = execFileSync(process.execPath, ['tools/deploy.mjs', '--mode', 'dev', ...extra], { encoding: 'utf8' }).trim().split('\n').pop();
   execFileSync(process.execPath, ['-e', 'setTimeout(() => {}, 5000)']);
   return line;
 };
@@ -70,6 +70,9 @@ async function scenario(name, fn) {
   console.log(`${pass ? 'PASS' : 'FAIL'} ${name} (${Date.now() - t0} ms)`);
   for (const c of checks) if (!c.ok) console.log(`   ✖ ${c.label} ${c.detail}`);
 }
+
+// Always start from a dev deployment: this suite asserts on the mocks.
+console.log(deploy());
 
 const base = {
   name: 'Mira Halden', company: 'Northwind Dental', website: 'northwinddental.example', phone: '+1 555 010 2233',
@@ -229,7 +232,9 @@ await scenario('error-workflow', async (check) => {
 await mocks.close();
 const pass = results.filter((r) => r.pass).length;
 const out = { at: new Date().toISOString(), run, mode: cfg.mode, model: cfg.aiModel, scenarios: results.length, pass, client_retries: retries, results };
-mkdirSync('results', { recursive: true });
-writeFileSync(`results/e2e-${out.at.slice(0, 10)}.json`, JSON.stringify(out, null, 2) + '\n');
+// A partial run (--only) never overwrites the published full result.
+const dir = only ? 'results/raw' : 'results';
+mkdirSync(dir, { recursive: true });
+writeFileSync(`${dir}/e2e-${only ? 'partial-' : ''}${out.at.slice(0, 10)}.json`, JSON.stringify(out, null, 2) + '\n');
 console.log(`${pass}/${results.length} scenarios passed; client retries: ${retries.length}${retries.length ? ' ' + JSON.stringify(retries) : ''}`);
 process.exit(pass === results.length ? 0 : 1);
