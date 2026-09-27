@@ -8,6 +8,9 @@ import { N8N, config, readTab, sheets, sleep } from './common.mjs';
 import { loadLib } from '../tests/load.mjs';
 
 const cfg = config();
+// FORM_BASE: the public tunnel URL, so the form arrives from outside (default: local n8n).
+const FORM_BASE = (process.env.FORM_BASE ?? N8N).replace(/\/$/, '');
+const viaTunnel = FORM_BASE !== N8N;
 const L = loadLib();
 const email = cfg.liveLeadEmail;
 const key = L.leadKey(email);
@@ -33,7 +36,7 @@ const lead = {
   message: 'We run three dental clinics and want online booking that syncs with our practice software, plus reminder emails to reduce no-shows. We would like to start this month.',
 };
 const t0 = Date.now();
-const r = await fetch(`${N8N}/webhook/lead-intake`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lead) });
+const r = await fetch(`${FORM_BASE}/webhook/lead-intake`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lead) });
 const ack = { status: r.status, ms: Date.now() - t0 };
 console.log(`form → ${ack.status} in ${ack.ms} ms. Approve or reject in Telegram now (waiting up to 15 min)…`);
 
@@ -48,7 +51,7 @@ for (;;) {
 }
 const out = {
   at: new Date().toISOString(),
-  mode: 'live, local webhook (no tunnel)',
+  mode: viaTunnel ? 'live, public tunnel (form posted to the public URL, approval link opened on a phone)' : 'live, local webhook (no tunnel)',
   services: { sheets: 'real', llm: cfg.aiModel, telegram: 'real bot', smtp: `real (${cfg.smtp.host})` },
   ack, marks,
   row: row && Object.fromEntries(['status', 'rule_score', 'ai_fit_score', 'final_score', 'tier', 'needs_review', 'intent', 'summary', 'reply_draft', 'decision', 'decided_at', 'replied_at'].map((k) => [k, mask(row[k])])),

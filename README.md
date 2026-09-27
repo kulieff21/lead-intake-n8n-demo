@@ -74,24 +74,30 @@ flowchart LR
 Failure scenarios reconfigure the deployment (`--ai-base-url`, `--smtp-port`, `--sheet-id`,
 `--wait-minutes`). The workflow itself has no test switches.
 
-### Live run (local webhook)
+### Live run through a public URL
 
 One lead through the real services: Google Sheets, the LLM, a real Telegram bot and Gmail SMTP.
-A person approved it in Telegram. [`results/live-2026-09-26.json`](results/live-2026-09-26.json)
+The form was posted to a public Cloudflare quick-tunnel URL, and the approval link in Telegram
+was opened and clicked on a phone. [`results/live-2026-09-27.json`](results/live-2026-09-27.json)
 (addresses redacted).
 
 | Step | Measured |
 |---|---|
-| Form → `202` | 163 ms |
-| Row `pending_approval`, message in Telegram | 10.7 s (rule 75, AI 92, final 85, hot) |
-| Human clicked Approve → row `replied` | 61.5 s after the form |
-| Reply in the recipient's inbox | checked over IMAP: subject, recipient, body = the approved draft |
+| Form → `202` (through the tunnel) | 1219 ms |
+| Row `pending_approval`, message in Telegram | 13.2 s (rule 75, AI 94, final 86, hot) |
+| Approve tapped on the phone → row `replied` | 160.9 s after the form (mostly the human) |
+| Reply in the recipient's inbox | checked over IMAP: subject, body = the approved draft |
 
-The rule score is 75 here, not 90 as in the dev run, because the live test address is a
-Gmail address and the rules do not award company-mailbox points to free mailboxes.
+The tunnel pointed at `tools/gate.mjs`, a small path filter, not at n8n: only
+`POST /webhook/lead-intake` and `GET /webhook-waiting/<id>` pass. The editor, `/rest` and
+`/api` returned 404 through the public URL.
 
-**Not yet shown:** the form arriving from outside and the approval clicked on a phone. Both
-need a public URL (tunnel). The approval link here pointed at `127.0.0.1`.
+The rule score is 75, not 90 as in the dev run, because the live test address is a Gmail
+address and the rules do not award company-mailbox points to free mailboxes.
+
+An earlier live run ([`results/live-2026-09-26.json`](results/live-2026-09-26.json)) used a
+local webhook and an approval link on `127.0.0.1`: form → `202` in 163 ms, row
+`pending_approval` in 10.7 s, `replied` 61.5 s after the form.
 
 ## Known limits
 
@@ -116,6 +122,8 @@ tests/            node --test unit tests, loading the same files the nodes run (
 tools/build.mjs   generates workflows/*.json from src/lib (placeholders, no instance data)
 tools/deploy.mjs  sheet tabs + headers, credentials (updated in place), publish, waits for the webhook
 tools/e2e.mjs     the scenarios above; mocks in tools/mocks.mjs
+tools/live.mjs    one live lead through the real services (FORM_BASE = public URL)
+tools/gate.mjs    path filter for a public tunnel: only the form and approval links pass
 workflows/        importable n8n JSON: main workflow (26 nodes) + error workflow (3 nodes)
 ```
 
@@ -135,6 +143,9 @@ node tools/e2e.mjs
 
 Set n8n's `WEBHOOK_URL` to a public URL, or to `http://127.0.0.1:5678/` for a local test.
 Telegram rejects inline-button URLs on `localhost` ("Wrong HTTP URL") but accepts `127.0.0.1`.
+Check the value for trailing whitespace: n8n builds approval links by joining it with
+`/webhook-waiting/…`, so a stray space yields a link that 404s. For a tunnel, run
+`node tools/gate.mjs` and point the tunnel at port 5680 (5679 is n8n's task broker).
 
 To import by hand instead: import both files from `workflows/`, then replace the `__PLACEHOLDER__`
 values and select your credentials.
