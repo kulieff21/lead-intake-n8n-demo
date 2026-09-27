@@ -88,6 +88,16 @@ was opened and clicked on a phone. [`results/live-2026-09-27.json`](results/live
 | Approve tapped on the phone → row `replied` | 160.9 s after the form (mostly the human) |
 | Reply in the recipient's inbox | checked over IMAP: subject, body = the approved draft |
 
+<p>
+<img src="docs/img/telegram-card.png" width="30%" alt="Approval message in Telegram: scores, AI summary, reply draft, Approve and Reject">
+<img src="docs/img/reply-sent-page.png" width="30%" alt="Page shown after tapping Approve: Reply sent, CRM row updated">
+<img src="docs/img/telegram-after-approve.png" width="30%" alt="Confirmation in the same chat after the reply was sent">
+</p>
+
+![n8n execution of the live run: the path taken is green](docs/img/execution-61.png)
+
+Screenshots from that run, taken on the phone (the address is redacted) and in the n8n editor.
+
 The tunnel pointed at `tools/gate.mjs`, a small path filter, not at n8n: only
 `POST /webhook/lead-intake` and `GET /webhook-waiting/<id>` pass. The editor, `/rest` and
 `/api` returned 404 through the public URL.
@@ -124,6 +134,8 @@ tools/deploy.mjs  sheet tabs + headers, credentials (updated in place), publish,
 tools/e2e.mjs     the scenarios above; mocks in tools/mocks.mjs
 tools/live.mjs    one live lead through the real services (FORM_BASE = public URL)
 tools/gate.mjs    path filter for a public tunnel: only the form and approval links pass
+tools/portfolio_images.py  portfolio images from results/ and docs/img (stdlib only)
+docs/img/         screenshots of the live run
 workflows/        importable n8n JSON: main workflow (26 nodes) + error workflow (3 nodes)
 ```
 
