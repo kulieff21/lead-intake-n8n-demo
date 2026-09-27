@@ -1,0 +1,31 @@
+{
+  "lead": "tools/live-lead.mjs",
+  "mailbox": "free",
+  "score": 75,
+  "factors": [
+    {
+      "factor": "budget 5k-20k",
+      "points": 30
+    },
+    {
+      "factor": "timeline asap",
+      "points": 20
+    },
+    {
+      "factor": "company named",
+      "points": 8
+    },
+    {
+      "factor": "website given",
+      "points": 5
+    },
+    {
+      "factor": "phone given",
+      "points": 5
+    },
+    {
+      "factor": "message 28 words",
+      "points": 7
+    }
+  ]
+}

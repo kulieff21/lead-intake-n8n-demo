@@ -5,6 +5,8 @@ it twice (deterministic rules and an LLM with a strict JSON schema), and asks a 
 to approve the AI-drafted reply. Only an approved reply is emailed. Every failure path ends in an
 alert and a row in an `errors` tab, never in a lead that quietly disappears.
 
+**Case study page:** https://kulieff21.github.io/lead-intake-n8n-demo/ (the live run replayed, the scenarios, the scores).
+
 **This is a demo.** "Kestrel & Vale Studio" is a fictional agency and every lead is synthetic
 (`.example` domains). Built with AI assistance and reviewed by a human.
 
@@ -134,6 +136,7 @@ tools/deploy.mjs  sheet tabs + headers, credentials (updated in place), publish,
 tools/e2e.mjs     the scenarios above; mocks in tools/mocks.mjs
 tools/live.mjs    one live lead through the real services (FORM_BASE = public URL)
 tools/gate.mjs    path filter for a public tunnel: only the form and approval links pass
+tools/case_study.py  builds site/index.html (the case study page) from results/ and docs/img
 tools/portfolio_images.py  portfolio images from results/ and docs/img (stdlib only)
 docs/img/         screenshots of the live run
 workflows/        importable n8n JSON: main workflow (26 nodes) + error workflow (3 nodes)

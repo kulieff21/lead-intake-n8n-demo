@@ -6,6 +6,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { N8N, config, readTab, sheets, sleep } from './common.mjs';
 import { loadLib } from '../tests/load.mjs';
+import { LIVE_LEAD } from './live-lead.mjs';
 
 const cfg = config();
 // FORM_BASE: the public tunnel URL, so the form arrives from outside (default: local n8n).
@@ -30,11 +31,7 @@ if (idx >= 0) {
   console.log('removed earlier live row');
 }
 
-const lead = {
-  name: 'Mira Halden', company: 'Northwind Dental', website: 'northwinddental.example', phone: '+1 555 010 2233',
-  budget: '5k-20k', timeline: 'asap', consent: true, source: 'website', email,
-  message: 'We run three dental clinics and want online booking that syncs with our practice software, plus reminder emails to reduce no-shows. We would like to start this month.',
-};
+const lead = { ...LIVE_LEAD, email };
 const t0 = Date.now();
 const r = await fetch(`${FORM_BASE}/webhook/lead-intake`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lead) });
 const ack = { status: r.status, ms: Date.now() - t0 };

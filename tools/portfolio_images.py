@@ -4,7 +4,7 @@
     (then render each HTML at 1000x750, deviceScaleFactor 2)
 
 Numbers come from results/live-2026-09-27.json and results/e2e-2026-09-26.json; the lead is the
-one in tools/live.mjs; screenshots are docs/img (addresses redacted). Standard library only.
+one in tools/live-lead.mjs; screenshots are docs/img (addresses redacted). Standard library only.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "build" / "portfolio"
 LIVE = json.loads((ROOT / "results" / "live-2026-09-27.json").read_text(encoding="utf-8"))
 E2E = json.loads((ROOT / "results" / "e2e-2026-09-26.json").read_text(encoding="utf-8"))
-LIVE_SRC = (ROOT / "tools" / "live.mjs").read_text(encoding="utf-8")
+LIVE_SRC = (ROOT / "tools" / "live-lead.mjs").read_text(encoding="utf-8")
 E2E_SRC = (ROOT / "tools" / "e2e.mjs").read_text(encoding="utf-8")
 TZ = dt.timezone(dt.timedelta(hours=4))  # the phone's clock (Baku)
 
